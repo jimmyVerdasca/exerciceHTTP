@@ -3,10 +3,12 @@ require('dotenv/config');
 const {port} = require('./config');
 const api = require('./routes/api');
 const auth = require('./auth');
+const passport = require('passport');
 
 const app = express();
 
 app.use(express.json());
+app.use(passport.initialize());
 
 app.use('/api', api);
 app.use('/auth', auth);
