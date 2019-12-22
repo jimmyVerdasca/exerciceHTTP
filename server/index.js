@@ -10,8 +10,8 @@ const app = express();
 app.use(express.json());
 app.use(passport.initialize());
 
-app.use('/api', api);
 app.use('/auth', auth);
+app.use('/', api);
 
 app.use((err, req, res, next) => {
     console.error(err);
