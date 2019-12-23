@@ -4,7 +4,7 @@ const {jwtOptions} = require('./config');
 const passport = require('passport');
 const passportLocal = require('passport-local');
 const passportJWT = require('passport-jwt');
-const mongo = require("./db");
+const mongoCallback = require("./db").mongoCallback;
 const ObjectId = require('mongodb').ObjectID;
 
 const router = express.Router();
@@ -19,7 +19,7 @@ passport.use('localStrategy', new LocalStrategy(
         passwordField: 'password'
    },
    (username, password, done) => {
-        mongo((db) => {
+        mongoCallback((db) => {
             db.collection("users").findOne({username: username, password: password}, function(err, USER) {
                 if (USER !== null && username === USER.username && password === USER.password) {
                     done(null, {id: USER._id, username: USER.username, password: password});
@@ -40,7 +40,7 @@ passport.use('jwtStrategy', new JWTStrategy(
     (jwtPayload, done) => {
         const {userId} = jwtPayload;
         
-        mongo((db) => {
+        mongoCallback((db) => {
              db.collection("users").findOne({_id: ObjectId(userId)}, function(err, USER) {
                  if (USER === null || userId !== USER._id.toString()) {
                     done(null, false);

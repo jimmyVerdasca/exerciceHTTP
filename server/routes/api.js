@@ -1,49 +1,81 @@
 const express = require('express');
 const passport = require('passport');
-const mongo = require("../db");
+const ObjectId = require('mongodb').ObjectID;
+const mongoCallback = require("../db").mongoCallback;
+const create = require("../db").create;
+const getAll = require("../db").getAll;
+const getOne = require("../db").getOne;
+const updateOne = require("../db").updateOne;
+const deleteOne = require("../db").deleteOne;
+const date = require('date-and-time');
 require('mongodb');
 
 const router = express.Router();
 const authenticate = () => passport.authenticate('jwtStrategy', {session: false});
 
+function respondToCreate(response, res) {
+    if (response === null || response.ops[0] === null) {
+        res.write("impossible to create");
+        res.status(500).end();
+    } else {
+        res.write(JSON.stringify(response.ops[0]));
+        res.status(201).end();
+    }
+}
+
+
 //A single HTTP route /users that allows to create user accounts by providing a JSON payload containinig the fields username and password.
 router.post('/users', (req, res) => {
     const user = {username: req.body.username, password: req.body.password};
-    mongo((db) => {
-        db.collection('users').insertOne(user, function(err, response) {
-            if (response === null || response.ops[0] === null) {
-                res.write("impossible to create");
-                res.status(500).end();
-            } else {
-                res.write(JSON.stringify(response.ops[0]));
-                res.status(201).end();
-            }
-        });
+    create('users', user, (response) => {
+        respondToCreate(response, res);
     });
 });
 
+// Create
 router.post('/datas', authenticate(), (req, res) => {
-    res.send({plop: null});
+    const id = String(req.body.id);
+    const content = req.body.data;
+    let date = new Date();
+    date = date.toUTCString();
+    let data;
+    if (id !== "undefined") {
+        data  = {_id: id, data: content, created: date, modified: date}
+    } else {
+        data  = {data: content, created: date, modified: date}
+    }
+    create('datas', data, (response) => {
+        respondToCreate(response, res);
+    });
 });
 
-// Retrieve all Notes
+// Read all
 router.get('/datas', authenticate(), (req, res) => {
-    res.send({plop: null});
+    getAll('datas', (response) => {
+        res.send(response);
+    });
 });
 
-// Retrieve a single Note with noteId
+// Read one
 router.get('/datas/:dataId', authenticate(), (req, res) => {
-    res.send({plop: null});
+    getOne('datas', req.params.dataId, (response) => {
+        res.send(response);
+    });
 });
 
-// Update a Note with noteId
+// Update one
 router.put('/datas/:dataId', authenticate(), (req, res) => {
-    res.send({plop: null});
+    let {created, ...newData} = req.body;
+    updateOne('datas', req.params.dataId, newData, (response) => {
+        res.send(response);
+    });
 });
 
-// Delete a Note with noteId
+// Delete one
 router.delete('/datas/:dataId', authenticate(), (req, res) => {
-    res.send({plop: null});
+    deleteOne('datas', req.params.dataId, (response) => {
+        res.send(response);
+    });
 });
 
 module.exports = router;
