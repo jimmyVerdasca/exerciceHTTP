@@ -2,20 +2,27 @@
 # Simple HTTP server
 This project is a simple HTTP server. Routes are :
 
-POST /users
-POST /auth/login
-POST /datas
-GET /datas
-GET /datas/:dataId
-UPDATE /datas/:dataId
-DELTE /datas/:dataId
+METHOD | PATH           | BODY               | HEADERS       | RETURN
+-------|----------------|--------------------|---------------|--------
+POST   | /users         | username, password |               | username, passord, id
+POST   | /auth/login    | username, password | Authorization | user{id, username}, token
+POST   | /datas         | [id], data         | Authorization | id, data, created, modified
+GET    | /datas         |                    | Authorization | array of (id, data, created, modified)
+GET    | /datas/:dataId |                    | Authorization | id, data, created, modified
+UPDATE | /datas/:dataId | data               | Authorization | status 200 or 304
+DELTEE | /datas/:dataId |                    | Authorization | status 200 or 404
+
+remark all body not empty method nécessite a header Content-Type to application/json
 
 # requirement
 
 In a empty folder:
 `git clone git@github.com:jimmyVerdasca/exerciceHTTP.git`
+
 `cd server`
+
 `npm install express mongodb passport date-and-time dotenv jsonwebtoken passeport-jwt passport-local`
+
 `npm install --save-dev mocha nodemon`
 
 express easy to use HTTP library used to write the API
