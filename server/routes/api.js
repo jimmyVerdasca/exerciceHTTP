@@ -16,10 +16,20 @@ const authenticate = () => passport.authenticate('jwtStrategy', {session: false}
 function respondToCreate(response, res) {
     if (response === null || response.ops[0] === null) {
         res.write("impossible to create");
-        res.status(500).end();
+        res.status(500);
+        res.send();
     } else {
-        res.write(JSON.stringify(response.ops[0]));
-        res.status(201).end();
+        res.status(201);
+        res.send(JSON.stringify(response.ops[0]));
+    }
+}
+
+function handlePutORDELETEResponse(req, res, response) {
+    if(response.modifiedCount === 0) {
+        res.status(404);
+        res.send("data " + req.params.dataId + " not found");
+    } else {
+        res.status(204).send();
     }
 }
 
@@ -66,16 +76,26 @@ router.get('/datas/:dataId', authenticate(), (req, res) => {
 // Update one
 router.put('/datas/:dataId', authenticate(), (req, res) => {
     let {created, ...newData} = req.body;
-    updateOne('datas', req.params.dataId, newData, (response) => {
-        res.send(response);
-    });
+    try {
+        updateOne('datas', req.params.dataId, newData, (response) => {
+            handlePutORDELETEResponse(req, res, response);
+        });
+    } catch(err) {
+        res.status(500);
+        res.send(err);
+    }
 });
 
 // Delete one
 router.delete('/datas/:dataId', authenticate(), (req, res) => {
-    deleteOne('datas', req.params.dataId, (response) => {
-        res.send(response);
-    });
+    try {
+        deleteOne('datas', req.params.dataId, (response) => {
+            handlePutORDELETEResponse(req, res, response);
+        });
+    } catch(err) {
+        res.status(500);
+        res.send(err);
+    }
 });
 
 module.exports = router;

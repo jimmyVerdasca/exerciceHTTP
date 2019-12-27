@@ -57,7 +57,6 @@ module.exports = {
             // if id length is 24 it's maybe an automatic id from mongoDB
             const query = id.length === 24 ? {$or: [{_id: id}, {_id: new ObjectId(id)}]} : {_id: id};
             client.db(dbName).collection(collection).findOne(query, function(err, itemFound) {
-                console.log(itemFound);
                 itemFound.data = null;
                 let date = new Date();
                 itemFound.deleted = date;
