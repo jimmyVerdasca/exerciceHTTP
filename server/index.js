@@ -19,5 +19,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-    console.log(`plop ${port}`);
+    console.log(`server listening at port: ${port}`);
 });

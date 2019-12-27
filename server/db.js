@@ -74,5 +74,13 @@ module.exports = {
                 client.close();
             });
         });
+    },
+    cleanOne: function(collection, id, cb) {
+        MongoClient.connect(url, {useNewUrlParser: true,  useUnifiedTopology: true}, async function(err, client) {
+            await client.db(dbName).collection(collection).deleteOne({_id: id}, function(err, response) {
+                client.close();
+                cb();
+            });
+        });
     }
 }

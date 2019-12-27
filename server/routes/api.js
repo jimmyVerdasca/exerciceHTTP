@@ -77,7 +77,6 @@ function respondToPUTOrDELETE(req, res, response) {
 router.post('/users', (req, res) => {
     let user = {username: req.body.username, password: req.body.password};
     isUserExistYet(user, (exist) => {
-        console.log("ex" + exist);
         if(!exist) {
             user._id = cuid();
             create('users', user, (response) => {
