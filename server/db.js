@@ -43,7 +43,7 @@ module.exports = {
     updateOne: function(collection, id, updatedObject, cb) {
         MongoClient.connect(url, {useNewUrlParser: true,  useUnifiedTopology: true}, function(err, client) {
             // if id length is 24 it's maybe an automatic id from mongoDB
-            const query = id.length === 24 ? {$or: [{_id: id}, {_id: new ObjectId(id)}]} : {_id: id};
+            const query = id.length === 24 ? {$or: [{_id: id, deleted: null}, {_id: new ObjectId(id)}]} : {_id: id, deleted: null};
             let date = new Date();
             updatedObject.modified = date;
             client.db(dbName).collection(collection).updateOne(query, {$set: updatedObject}, {}, function(err, response) {
@@ -55,7 +55,7 @@ module.exports = {
     deleteOne: function(collection, id, cb) {
         MongoClient.connect(url, {useNewUrlParser: true,  useUnifiedTopology: true}, function(err, client) {
             // if id length is 24 it's maybe an automatic id from mongoDB
-            const query = id.length === 24 ? {$or: [{_id: id}, {_id: new ObjectId(id)}]} : {_id: id};
+            const query = id.length === 24 ? {$or: [{_id: id, deleted: null}, {_id: new ObjectId(id)}]} : {_id: id, deleted: null};
             client.db(dbName).collection(collection).findOne(query, function(err, itemFound) {
                 itemFound.data = null;
                 let date = new Date();
@@ -64,6 +64,14 @@ module.exports = {
                     cb(response);
                     client.close();
                 });
+            });
+        });
+    },
+    getUser: function(user, cb) {
+        MongoClient.connect(url, {useNewUrlParser: true,  useUnifiedTopology: true}, function(err, client) {
+            client.db(dbName).collection('users').findOne(user, function(err, response) {
+                cb(response);
+                client.close();
             });
         });
     }

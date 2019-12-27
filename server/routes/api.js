@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const getUser = require("../db").getUser;
 const create = require("../db").create;
 const getAll = require("../db").getAll;
 const getOne = require("../db").getOne;
@@ -23,7 +24,6 @@ function checkDataCreationFields(data) {
                 if (countFields > 10) {
                     return false;
                 }
-                console.log(data[prop].length);
                 if (typeof data[prop] !== 'number'
                 && (typeof data[prop] !== 'string' || data[prop].length > 512)) {
                     return false;
@@ -34,6 +34,16 @@ function checkDataCreationFields(data) {
     } else {
         return false;
     }
+}
+
+function isUserExistYet(user, cb) {
+    getUser(user, (response) => {
+        if (response === null) {
+            cb(false);
+        } else {
+            cb(true);
+        }
+    });
 }
 
 function dbToObject(object) {
@@ -56,7 +66,7 @@ function respondToCreate(response, res) {
 function respondToPUTOrDELETE(req, res, response) {
     if(response.modifiedCount === 0) {
         res.status(404);
-        res.send("data " + req.params.dataId + " not found");
+        res.send("data " + req.params.dataId + " not found or deleted");
     } else {
         res.status(204).send();
     }
@@ -65,9 +75,17 @@ function respondToPUTOrDELETE(req, res, response) {
 
 //A single HTTP route /users that allows to create user accounts by providing a JSON payload containinig the fields username and password.
 router.post('/users', (req, res) => {
-    const user = {username: req.body.username, password: req.body.password, _id: cuid()};
-    create('users', user, (response) => {
-        respondToCreate(response, res);
+    let user = {username: req.body.username, password: req.body.password};
+    isUserExistYet(user, (exist) => {
+        console.log("ex" + exist);
+        if(!exist) {
+            user._id = cuid();
+            create('users', user, (response) => {
+                respondToCreate(response, res);
+            });
+        } else {
+            res.status(400).send('user already exist, maybe you should login');
+        }
     });
 });
 
