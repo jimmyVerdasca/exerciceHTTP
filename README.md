@@ -22,7 +22,7 @@ In a empty folder:
 
 `cd server`
 
-`npm install express mongodb passport date-and-time dotenv jsonwebtoken passeport-jwt passport-local`
+`npm install express mongodb passport date-and-time dotenv jsonwebtoken passeport-jwt passport-local cuid`
 
 `npm install --save-dev mocha nodemon`
 
@@ -39,6 +39,8 @@ date-and-time allows to give timestamps at Creation of items in database
 dotenv is the module to load environnement variables stored in .env file in this project
 
 jsonwebtoken allows to use sign and verify methods to create and check the JWTtoken
+
+cuid is used to create collision safe ids.
 
 # How to run
 ## `npm run`

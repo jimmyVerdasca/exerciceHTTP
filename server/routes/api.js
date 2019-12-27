@@ -1,17 +1,46 @@
 const express = require('express');
 const passport = require('passport');
-const ObjectId = require('mongodb').ObjectID;
-const mongoCallback = require("../db").mongoCallback;
 const create = require("../db").create;
 const getAll = require("../db").getAll;
 const getOne = require("../db").getOne;
 const updateOne = require("../db").updateOne;
 const deleteOne = require("../db").deleteOne;
-const date = require('date-and-time');
+const cuid = require('cuid');
 require('mongodb');
 
 const router = express.Router();
 const authenticate = () => passport.authenticate('jwtStrategy', {session: false});
+
+function checkDataCreationFields(data) {
+    if (typeof data === 'object') {
+        if(data.length > 10) {
+            return false;
+        }
+        let countFields = 0;
+        for (var prop in data) {
+            if (Object.prototype.hasOwnProperty.call(data, prop)) {
+                countFields++;
+                if (countFields > 10) {
+                    return false;
+                }
+                console.log(data[prop].length);
+                if (typeof data[prop] !== 'number'
+                && (typeof data[prop] !== 'string' || data[prop].length > 512)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function dbToObject(object) {
+    object['id'] = object._id;
+    delete object._id;
+    return object
+}
 
 function respondToCreate(response, res) {
     if (response === null || response.ops[0] === null) {
@@ -20,11 +49,11 @@ function respondToCreate(response, res) {
         res.send();
     } else {
         res.status(201);
-        res.send(JSON.stringify(response.ops[0]));
+        res.send(JSON.stringify(dbToObject(response.ops[0])));
     }
 }
 
-function handlePutORDELETEResponse(req, res, response) {
+function respondToPUTOrDELETE(req, res, response) {
     if(response.modifiedCount === 0) {
         res.status(404);
         res.send("data " + req.params.dataId + " not found");
@@ -36,7 +65,7 @@ function handlePutORDELETEResponse(req, res, response) {
 
 //A single HTTP route /users that allows to create user accounts by providing a JSON payload containinig the fields username and password.
 router.post('/users', (req, res) => {
-    const user = {username: req.body.username, password: req.body.password};
+    const user = {username: req.body.username, password: req.body.password, _id: cuid()};
     create('users', user, (response) => {
         respondToCreate(response, res);
     });
@@ -44,15 +73,19 @@ router.post('/users', (req, res) => {
 
 // Create
 router.post('/datas', authenticate(), (req, res) => {
-    const id = String(req.body.id);
     const content = req.body.data;
+    if (!checkDataCreationFields(content)) {
+        res.status(400).send("data field should be an object that contains at most 10 fields of type integers or strings of max length 512");
+        return;
+    }
+    const id = String(req.body.id);
     let date = new Date();
     date = date.toUTCString();
     let data;
     if (id !== "undefined") {
         data  = {_id: id, data: content, created: date, modified: date}
     } else {
-        data  = {data: content, created: date, modified: date}
+        data  = {_id: cuid(), data: content, created: date, modified: date}
     }
     create('datas', data, (response) => {
         respondToCreate(response, res);
@@ -62,14 +95,18 @@ router.post('/datas', authenticate(), (req, res) => {
 // Read all
 router.get('/datas', authenticate(), (req, res) => {
     getAll('datas', (response) => {
-        res.send(response);
+        for (let index = 0; index < response.length; index++) {
+            response[index] = dbToObject(response[index]);
+            
+        }
+        res.send(dbToObject(response));
     });
 });
 
 // Read one
 router.get('/datas/:dataId', authenticate(), (req, res) => {
     getOne('datas', req.params.dataId, (response) => {
-        res.send(response);
+        res.send(dbToObject(response));
     });
 });
 
@@ -78,7 +115,7 @@ router.put('/datas/:dataId', authenticate(), (req, res) => {
     let {created, ...newData} = req.body;
     try {
         updateOne('datas', req.params.dataId, newData, (response) => {
-            handlePutORDELETEResponse(req, res, response);
+            respondToPUTOrDELETE(req, res, response);
         });
     } catch(err) {
         res.status(500);
@@ -90,7 +127,7 @@ router.put('/datas/:dataId', authenticate(), (req, res) => {
 router.delete('/datas/:dataId', authenticate(), (req, res) => {
     try {
         deleteOne('datas', req.params.dataId, (response) => {
-            handlePutORDELETEResponse(req, res, response);
+            respondToPUTOrDELETE(req, res, response);
         });
     } catch(err) {
         res.status(500);

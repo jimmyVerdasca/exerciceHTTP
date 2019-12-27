@@ -61,8 +61,8 @@ describe('/users test', function() {
     const user = data.data;
     assert.strictEqual(username, user.username);
     assert.strictEqual(password, user.password);
-    assert.notEqual(null, user._id);
-    assert.notEqual(undefined, user._id);
+    assert.notEqual(null, user.id);
+    assert.notEqual(undefined, user.id);
   });
 });
 
@@ -104,9 +104,9 @@ describe('/datas/:dataId GET test', function() {
     const dataCreated = await createData(textData, token);
 
     //get the new data
-    const dataGot = await getData(dataCreated.data._id, token);
+    const dataGot = await getData(dataCreated.data.id, token);
 
-    assert.strictEqual(dataCreated.data._id, dataGot.data._id);
+    assert.strictEqual(dataCreated.data.id, dataGot.data.id);
   });
 });
 
@@ -139,7 +139,7 @@ describe('/datas/:dataId UPDATE test', function() {
 
     // update the data Created
     const newTextData = "newTest";
-    await axios.put(url + '/datas/' + dataCreated.data._id, {data: newTextData},{ headers: { Authorization: `jwt ${token}` }})
+    await axios.put(url + '/datas/' + dataCreated.data.id, {data: newTextData},{ headers: { Authorization: `jwt ${token}` }})
       .then(async (res) => {
         return res;
       })
@@ -148,7 +148,7 @@ describe('/datas/:dataId UPDATE test', function() {
         assert.fail();
       });
     //get the data modified
-    const dataGot = await getData(dataCreated.data._id, token);
+    const dataGot = await getData(dataCreated.data.id, token);
     assert.strictEqual(newTextData, dataGot.data.data);
   });
 });
@@ -165,7 +165,7 @@ describe('/datas/:dataId DELETE test', function() {
     const dataCreated = await createData(textData, token);
 
     // delete the data
-    await axios.delete(url + '/datas/' + dataCreated.data._id,{ headers: { Authorization: `jwt ${token}` }})
+    await axios.delete(url + '/datas/' + dataCreated.data.id,{ headers: { Authorization: `jwt ${token}` }})
       .then(async (res) => {
         return res;
       })
@@ -175,7 +175,7 @@ describe('/datas/:dataId DELETE test', function() {
       });
 
     //get the data deleted
-    const dataGot = await getData(dataCreated.data._id, token);
+    const dataGot = await getData(dataCreated.data.id, token);
     assert.notEqual(undefined, dataGot.data.deleted);
     assert.strictEqual(undefined, dataCreated.data.deleted);
   });

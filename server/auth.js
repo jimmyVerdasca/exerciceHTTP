@@ -41,7 +41,9 @@ passport.use('jwtStrategy', new JWTStrategy(
         const {userId} = jwtPayload;
         
         mongoCallback((db) => {
-             db.collection("users").findOne({_id: ObjectId(userId)}, function(err, USER) {
+            // if id length is 24 it's maybe an automatic id from mongoDB
+            const query = userId.length === 24 ? {$or: [{_id: userId}, {_id: new ObjectId(userId)}]} : {_id: userId};
+             db.collection("users").findOne(query, function(err, USER) {
                  if (USER === null || userId !== USER._id.toString()) {
                     done(null, false);
                 } else {
