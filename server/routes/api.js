@@ -6,36 +6,19 @@ const getAll = require("../db").getAll;
 const getOne = require("../db").getOne;
 const updateOne = require("../db").updateOne;
 const deleteOne = require("../db").deleteOne;
+const dbToObject = require("../util").dbToObject;
+const checkDataCreationFields = require("../util").checkDataCreationFields;
 const cuid = require('cuid');
 require('mongodb');
 
 const router = express.Router();
 const authenticate = () => passport.authenticate('jwtStrategy', {session: false});
 
-function checkDataCreationFields(data) {
-    if (typeof data === 'object') {
-        if(data.length > 10) {
-            return false;
-        }
-        let countFields = 0;
-        for (var prop in data) {
-            if (Object.prototype.hasOwnProperty.call(data, prop)) {
-                countFields++;
-                if (countFields > 10) {
-                    return false;
-                }
-                if (typeof data[prop] !== 'number'
-                && (typeof data[prop] !== 'string' || data[prop].length > 512)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
-
+/**
+ * give to callback true or false if the given user exist yet in DB
+ * @param {object} user the user we are checking
+ * @param {function} cb function to call with resulting check value
+ */
 function isUserExistYet(user, cb) {
     getUser(user, (response) => {
         if (response === null) {
@@ -46,12 +29,14 @@ function isUserExistYet(user, cb) {
     });
 }
 
-function dbToObject(object) {
-    object['id'] = object._id;
-    delete object._id;
-    return object
-}
-
+/**
+ * simple response to a POST http request
+ * -status 500 if the creation failed
+ * -status 201 if the creation success
+ * 
+ * @param {*} response coming from the DB after trying to POST
+ * @param {*} res object to send back the result to the caller
+ */
 function respondToCreate(response, res) {
     if (response === null || response.ops[0] === null) {
         res.write("impossible to create");
@@ -63,6 +48,15 @@ function respondToCreate(response, res) {
     }
 }
 
+/**
+ * simple response to a PUT or DELETE http request
+ * -status 404 if we don't modify
+ * -status 204 if the modification success
+ * 
+ * @param {*} req request object
+ * @param {*} response coming from the DB after trying to PUT or DELETE
+ * @param {*} res object to send back the result to the caller
+ */
 function respondToPUTOrDELETE(req, res, response) {
     if(response.modifiedCount === 0) {
         res.status(404);
@@ -72,8 +66,7 @@ function respondToPUTOrDELETE(req, res, response) {
     }
 }
 
-
-//A single HTTP route /users that allows to create user accounts by providing a JSON payload containinig the fields username and password.
+// GET /users allows to create user accounts by providing a JSON payload containinig the fields username and password. (public route)
 router.post('/users', (req, res) => {
     let user = {username: req.body.username, password: req.body.password};
     isUserExistYet(user, (exist) => {
@@ -88,7 +81,9 @@ router.post('/users', (req, res) => {
     });
 });
 
-// Create
+// POST /datas allows to add new data to the data collection in DB.
+// Fields accepted for a data are : id(optional), data.
+// data contains at most 10 Fields of type integers or strings of max length 512 
 router.post('/datas', authenticate(), (req, res) => {
     const content = req.body.data;
     if (!checkDataCreationFields(content)) {
@@ -109,7 +104,7 @@ router.post('/datas', authenticate(), (req, res) => {
     });
 });
 
-// Read all
+// Read all datas in the DB
 router.get('/datas', authenticate(), (req, res) => {
     getAll('datas', (response) => {
         for (let index = 0; index < response.length; index++) {
@@ -120,14 +115,14 @@ router.get('/datas', authenticate(), (req, res) => {
     });
 });
 
-// Read one
+// Read one data in the DB with given id
 router.get('/datas/:dataId', authenticate(), (req, res) => {
     getOne('datas', req.params.dataId, (response) => {
         res.send(dbToObject(response));
     });
 });
 
-// Update one
+// Update one data in DB. Can not modify a deleted data.
 router.put('/datas/:dataId', authenticate(), (req, res) => {
     let {created, ...newData} = req.body;
     try {
@@ -140,7 +135,7 @@ router.put('/datas/:dataId', authenticate(), (req, res) => {
     }
 });
 
-// Delete one
+// Delete one delete the data field of the given data id and add a deleted timestamp
 router.delete('/datas/:dataId', authenticate(), (req, res) => {
     try {
         deleteOne('datas', req.params.dataId, (response) => {

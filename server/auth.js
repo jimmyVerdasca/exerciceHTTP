@@ -54,7 +54,7 @@ passport.use('jwtStrategy', new JWTStrategy(
     }
 ));
 
-
+// /auth/login path return a user and a token to be able to access private routes in futur http requests
 router.post('/login', passport.authenticate('localStrategy', {session: false}), (req, res) => {
     const {password, ...user} = req.user;
     const token = jwt.sign({userId: user.id}, jwtOptions.secret, { expiresIn: '48h'});
