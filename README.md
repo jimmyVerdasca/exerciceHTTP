@@ -46,7 +46,7 @@ will call `nodemon index.js`, nodemon will automatically restart the server each
 ## `npm test`
 will call mocha and run test in the folder test (first launch the server in an other command line tool)
 
-#Requirements explanation
+# Requirements explanation
 
 express easy to use HTTP library used to write the API
 
