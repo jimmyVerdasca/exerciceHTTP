@@ -29,9 +29,13 @@ In a empty folder:
 Then add a .env file in the folder server with this content :
 
 PORT=4000
+
 JWT_SECRET=r_9vi5ezinGXlv
+
 URL=http://localhost
+
 DBNAME=dbName
+
 DBLINK=mongodbgivenlink
 
 express easy to use HTTP library used to write the API
