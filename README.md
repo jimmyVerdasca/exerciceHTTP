@@ -22,9 +22,7 @@ In a empty folder:
 
 `cd exerciceHTTP/server/`
 
-`npm install express mongodb passport date-and-time dotenv jsonwebtoken passport-jwt passport-local cuid`
-
-`npm install --save-dev mocha nodemon`
+`npm install`
 
 Then add a .env file in the folder server with this content :
 
@@ -37,6 +35,18 @@ URL=http://localhost
 DBNAME=dbName
 
 DBLINK=mongodbgivenlink
+
+# How to run
+## `npm run start`
+will call `node index.js`
+
+## `npm run dev`
+will call `nodemon index.js`, nodemon will automatically restart the server each time you modify and save a file
+
+## `npm test`
+will call mocha and run test in the folder test (first launch the server in an other command line tool)
+
+#Requirements explanation
 
 express easy to use HTTP library used to write the API
 
@@ -53,11 +63,3 @@ dotenv is the module to load environnement variables stored in .env file in this
 jsonwebtoken allows to use sign and verify methods to create and check the JWTtoken
 
 cuid is used to create collision safe ids.
-
-# How to run
-## `npm run start`
-will call `node index.js`
-## `npm run dev`
-will call `nodemon index.js`, nodemon will automatically restart the server each time you modify and save a file
-## `npm test`
-will call mocha and run test in the folder test (first launch the server in an other command line tool)
